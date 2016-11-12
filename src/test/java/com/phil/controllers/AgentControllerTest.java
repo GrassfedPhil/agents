@@ -27,7 +27,7 @@ public class AgentControllerTest {
 
     @Test
     public void getAgents() throws Exception {
-        Agent michelle = new Agent("Michelle", "someLat", "someLong", "35", "Female");
+        Agent michelle = new Agent("Michelle", "someLat", "someLong", 35, "Female");
         when(agentRepository.findBySex("Female")).thenReturn(Arrays.asList(michelle));
 
         List<Agent> womenAgents = agentController.getAgents("Female");

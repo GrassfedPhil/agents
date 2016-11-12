@@ -18,7 +18,7 @@ public class Agent {
     String longitude;
 
     @Column
-    String age;
+    Integer age;
 
     @Column
     String sex;
@@ -26,7 +26,7 @@ public class Agent {
     protected Agent() {
     }
 
-    public Agent(String name, String latitude, String longitude, String age, String sex) {
+    public Agent(String name, String latitude, String longitude, Integer age, String sex) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -58,11 +58,11 @@ public class Agent {
         this.latitude = latitude;
     }
 
-    public String getAge() {
+    public Integer getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(Integer age) {
         this.age = age;
     }
 

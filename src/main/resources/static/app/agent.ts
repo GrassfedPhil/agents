@@ -2,6 +2,6 @@ export class Agent {
     name: string;
     latitude: string;
     longitude: string;
-    age: string;
+    age: number;
     sex: string;
 }

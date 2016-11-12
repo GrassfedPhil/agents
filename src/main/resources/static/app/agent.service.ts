@@ -5,7 +5,6 @@ import {Inject} from "@angular/core";
 
 export class AgentService {
 
-    private headers = new Headers({'Content-Type': 'application/json'});
     private agentsUrl = 'agents';
     constructor(@Inject(Http) private http: Http) { }
 

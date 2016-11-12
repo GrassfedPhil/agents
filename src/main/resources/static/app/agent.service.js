@@ -14,7 +14,6 @@ var core_1 = require("@angular/core");
 var AgentService = (function () {
     function AgentService(http) {
         this.http = http;
-        this.headers = new http_1.Headers({ 'Content-Type': 'application/json' });
         this.agentsUrl = 'agents';
     }
     AgentService.prototype.getFemaleAgents = function () {

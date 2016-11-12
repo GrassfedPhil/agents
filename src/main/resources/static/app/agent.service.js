@@ -16,13 +16,21 @@ var AgentService = (function () {
         this.http = http;
         this.agentsUrl = 'agents';
     }
-    AgentService.prototype.getFemaleAgents = function () {
-        return this.http.get(this.agentsUrl + "?gender=Female")
+    AgentService.prototype.getFemaleAgents = function (ageFilter) {
+        var url = this.agentsUrl + "?gender=Female";
+        if (ageFilter) {
+            url += "&ageToFilterBy=" + ageFilter;
+        }
+        return this.http.get(url)
             .toPromise()
             .then(function (response) { return response.json(); });
     };
-    AgentService.prototype.getMaleAgents = function () {
-        return this.http.get(this.agentsUrl + "?gender=Male")
+    AgentService.prototype.getMaleAgents = function (ageFilter) {
+        var url = this.agentsUrl + "?gender=Male";
+        if (ageFilter) {
+            url += "&ageToFilterBy=" + ageFilter;
+        }
+        return this.http.get(url)
             .toPromise()
             .then(function (response) { return response.json(); });
     };

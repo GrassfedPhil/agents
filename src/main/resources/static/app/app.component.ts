@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, Inject, Input} from '@angular/core';
 import {AgentService} from "./agent.service";
 import {Agent} from "./agent";
 
@@ -6,8 +6,11 @@ import {Agent} from "./agent";
 @Component({
     selector: 'my-app',
     template: `
-      <input #ageFilter (keyup.enter)="filterAge(ageFilter.value)">
-      <button (click)=filterAge(ageFilter.value)>Filter</button>
+      <input [(ngModel)]="ageFilter" (keyup.enter)="filter()">
+      <button (click)=filter()>Filter</button>
+      
+      <input [(ngModel)]="nameFilter"(keyup.enter)="filterName()">
+      <button (click)=filterName()>Filter</button>
      <div id="mapid"></div>
     `,
 
@@ -19,7 +22,12 @@ import {Agent} from "./agent";
 
 })
 export class AppComponent implements OnInit {
-    title = 'Tour of Heroes';
+    @Input
+    ageFilter;
+
+    @Input
+    nameFilter;
+
     agents: Agent[] = [];
     femaleAgents: Agent[] = [];
     maleAgents: Agent[] = [];
@@ -36,28 +44,49 @@ export class AppComponent implements OnInit {
         markerColor: 'red'
     });
 
+    highlightedMaleMarker = L.AwesomeMarkers.icon({
+        prefix: 'ion',
+        icon: 'man',
+        markerColor: 'orange'
+    });
+
+    highlightedFemaleMarker = L.AwesomeMarkers.icon({
+        prefix: 'ion',
+        icon: 'woman',
+        markerColor: 'orange'
+    });
+
 
     constructor(@Inject(AgentService) private agentService: AgentService) {
     }
 
-    filterAge(ageToFilterBy): void {
-        let filteredMaleAgents;
-        let filteredFemaleAgents;
-        if (!ageToFilterBy) {
-            filteredMaleAgents = this.maleAgents;
-            filteredFemaleAgents = this.femaleAgents;
-        } else {
-            ageToFilterBy = +ageToFilterBy;
-            filteredMaleAgents = this.maleAgents.filter(agent => agent.age <= ageToFilterBy);
-            filteredFemaleAgents = this.femaleAgents.filter(agent => agent.age <= ageToFilterBy);
-        }
-
+    filter(): void {
         this.resetMapLayers();
-        this.generateFemaleLayerGroup(filteredFemaleAgents);
-        this.generateMaleLayerGroup(filteredMaleAgents);
+        this.getAgentsFromServer();
+    }
 
-        this.femaleLayerGroup.addTo(this.map);
-        this.maleLayerGroup.addTo(this.map);
+    filterName(): void {
+        this.resetMapLayers();
+        this.processMaleServerResults(this.maleAgents);
+        this.processFemaleServerResults(this.femaleAgents);
+    }
+
+    filterByName(): void {
+        let filteredMaleAgents = [];
+        let filteredFemaleAgents = [];
+
+        if(this.nameFilter){
+            this.maleAgents.forEach(agent => {
+                agent.name.toLowerCase().startsWith(this.nameFilter) ? agent.highlight = true : agent.highlight = false;
+                filteredMaleAgents.push(agent);
+                this.maleAgents = filteredMaleAgents;
+            });
+            this.femaleAgents.forEach(agent => {
+                agent.name.toLowerCase().startsWith(this.nameFilter) ? agent.highlight = true : agent.highlight = false;
+                filteredFemaleAgents.push(agent);
+                this.femaleAgents = filteredFemaleAgents;
+            });
+        }
     }
 
     drawMap(): void {
@@ -70,23 +99,18 @@ export class AppComponent implements OnInit {
 
     ngOnInit(): void {
         this.drawMap();
-        this.agentService.getFemaleAgents().then(femaleAgents => {
-            this.femaleAgents = femaleAgents;
-            this.generateFemaleLayerGroup(femaleAgents);
-            this.femaleLayerGroup.addTo(this.map);
-        });
+        this.getAgentsFromServer();
+    }
 
-        this.agentService.getMaleAgents().then(maleAgents => {
-            this.maleAgents = maleAgents;
-            this.generateMaleLayerGroup(maleAgents);
-            this.maleLayerGroup.addTo(this.map);
-        })
+    getAgentsFromServer(): void {
+        this.agentService.getFemaleAgents(this.ageFilter).then(femaleAgents => this.processFemaleServerResults(femaleAgents));
+        this.agentService.getMaleAgents(this.ageFilter).then(maleAgents => this.processMaleServerResults(maleAgents))
     }
 
     generateFemaleLayerGroup(femaleAgents): void {
         let femaleMarkers = [];
         femaleAgents.forEach(femaleAgent => {
-            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], {icon: this.femaleMarker}).bindPopup('Name: ' + femaleAgent.name);
+            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], {icon: femaleAgent.highlight ? this.highlightedFemaleMarker : this.femaleMarker}).bindPopup('Name: ' + femaleAgent.name);
             femaleMarkers.push(marker);
         });
         this.femaleLayerGroup = L.layerGroup(femaleMarkers);
@@ -95,10 +119,24 @@ export class AppComponent implements OnInit {
     generateMaleLayerGroup(maleAgents): void {
         let maleMarkers = [];
         maleAgents.forEach(maleAgent => {
-            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], {icon: this.maleMarker}).bindPopup('Name: ' + maleAgent.name);
+            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], {icon: maleAgent.highlight ? this.highlightedMaleMarker : this.maleMarker}).bindPopup('Name: ' + maleAgent.name);
             maleMarkers.push(marker);
         });
         this.maleLayerGroup = L.layerGroup(maleMarkers);
+    }
+
+    processMaleServerResults(maleAgents): void {
+        this.maleAgents = maleAgents;
+        this.filterByName();
+        this.generateMaleLayerGroup(this.maleAgents);
+        this.maleLayerGroup.addTo(this.map);
+    }
+
+    processFemaleServerResults(femaleAgents): void {
+        this.femaleAgents = femaleAgents;
+        this.filterByName();
+        this.generateFemaleLayerGroup(this.femaleAgents);
+        this.femaleLayerGroup.addTo(this.map);
     }
 
     resetMapLayers(): void {

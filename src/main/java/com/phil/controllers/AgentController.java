@@ -17,10 +17,14 @@ public class AgentController {
     AgentRepository agentRepository;
 
     @RequestMapping("/agents")
-    public List<Agent> getAgents(@RequestParam String gender) {
+    public List<Agent> getAgents(@RequestParam String gender, @RequestParam(required = false) Integer ageToFilterBy) {
         List<Agent> agents = new ArrayList<>();
-
-        Iterable<Agent> agentIterable = agentRepository.findBySex(gender);
+        Iterable<Agent> agentIterable;
+        if (ageToFilterBy != null) {
+            agentIterable = agentRepository.findBySexAndAgeLessThan(gender, ++ageToFilterBy);
+        } else {
+            agentIterable = agentRepository.findBySex(gender);
+        }
         agentIterable.forEach(agents::add);
         return agents;
     }

@@ -9,14 +9,22 @@ export class AgentService {
     constructor(@Inject(Http) private http: Http) { }
 
 
-    getFemaleAgents(): Promise<Agent[]> {
-        return this.http.get(this.agentsUrl + "?gender=Female")
+    getFemaleAgents(ageFilter): Promise<Agent[]> {
+        var url = this.agentsUrl + "?gender=Female";
+        if(ageFilter) {
+            url += "&ageToFilterBy=" + ageFilter;
+        }
+        return this.http.get(url)
             .toPromise()
             .then(response => response.json() as Agent[]);
     }
 
-    getMaleAgents(): Promise<Agent[]> {
-        return this.http.get(this.agentsUrl + "?gender=Male")
+    getMaleAgents(ageFilter): Promise<Agent[]> {
+        var url = this.agentsUrl + "?gender=Male";
+        if(ageFilter) {
+            url += "&ageToFilterBy=" + ageFilter;
+        }
+        return this.http.get(url)
             .toPromise()
             .then(response => response.json() as Agent[]);
     }

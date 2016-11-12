@@ -30,7 +30,17 @@ public class AgentControllerTest {
         Agent michelle = new Agent("Michelle", "someLat", "someLong", 35, "Female");
         when(agentRepository.findBySex("Female")).thenReturn(Arrays.asList(michelle));
 
-        List<Agent> womenAgents = agentController.getAgents("Female");
+        List<Agent> womenAgents = agentController.getAgents("Female", null);
+
+        assertThat(womenAgents).contains(michelle);
+    }
+
+    @Test
+    public void getAgentsWillReturnFilteringByAge() throws Exception {
+        Agent michelle = new Agent("Michelle", "someLat", "someLong", 35, "Female");
+        when(agentRepository.findBySexAndAgeLessThan("Female", 36)).thenReturn(Arrays.asList(michelle));
+
+        List<Agent> womenAgents = agentController.getAgents("Female", 35);
 
         assertThat(womenAgents).contains(michelle);
     }

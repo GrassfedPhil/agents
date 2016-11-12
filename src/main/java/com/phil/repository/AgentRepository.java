@@ -8,4 +8,6 @@ import java.util.List;
 public interface AgentRepository extends CrudRepository<Agent, String> {
 
     List<Agent> findBySex(String sex);
+
+    List<Agent> findBySexAndAgeLessThan(String female, Integer ageToFilterBy);
 }

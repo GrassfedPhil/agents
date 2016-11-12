@@ -4,4 +4,5 @@ export class Agent {
     longitude: string;
     age: number;
     sex: string;
+    highlight: boolean;
 }

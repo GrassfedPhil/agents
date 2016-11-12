@@ -16,6 +16,8 @@ var AppComponent = (function () {
         this.agents = [];
         this.femaleAgents = [];
         this.maleAgents = [];
+        this.femaleLayerGroup = L.layerGroup([]);
+        this.maleLayerGroup = L.layerGroup([]);
         this.maleMarker = L.AwesomeMarkers.icon({
             prefix: 'ion',
             icon: 'man'
@@ -37,36 +39,22 @@ var AppComponent = (function () {
         });
     }
     AppComponent.prototype.filter = function () {
-        this.resetMapLayers();
         this.getAgentsFromServer();
     };
     AppComponent.prototype.filterName = function () {
-        this.resetMapLayers();
         this.processMaleServerResults(this.maleAgents);
         this.processFemaleServerResults(this.femaleAgents);
     };
-    AppComponent.prototype.filterByName = function () {
-        var _this = this;
-        var filteredMaleAgents = [];
-        var filteredFemaleAgents = [];
-        if (this.nameFilter) {
-            this.maleAgents.forEach(function (agent) {
-                agent.name.toLowerCase().startsWith(_this.nameFilter) ? agent.highlight = true : agent.highlight = false;
-                filteredMaleAgents.push(agent);
-                _this.maleAgents = filteredMaleAgents;
-            });
-            this.femaleAgents.forEach(function (agent) {
-                agent.name.toLowerCase().startsWith(_this.nameFilter) ? agent.highlight = true : agent.highlight = false;
-                filteredFemaleAgents.push(agent);
-                _this.femaleAgents = filteredFemaleAgents;
-            });
-        }
+    AppComponent.prototype.highlightAgent = function (agent) {
+        return this.nameFilter && agent.name.toLowerCase().startsWith(this.nameFilter.toLowerCase());
     };
     AppComponent.prototype.drawMap = function () {
         this.map = L.map('mapid').setView([41.49, -99.9], 3);
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(this.map);
+        this.femaleLayerGroup.addTo(this.map);
+        this.maleLayerGroup.addTo(this.map);
     };
     AppComponent.prototype.ngOnInit = function () {
         this.drawMap();
@@ -81,35 +69,31 @@ var AppComponent = (function () {
         var _this = this;
         var femaleMarkers = [];
         femaleAgents.forEach(function (femaleAgent) {
-            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], { icon: femaleAgent.highlight ? _this.highlightedFemaleMarker : _this.femaleMarker }).bindPopup('Name: ' + femaleAgent.name);
+            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], { icon: _this.highlightAgent(femaleAgent) ? _this.highlightedFemaleMarker : _this.femaleMarker }).bindPopup('Name: ' + femaleAgent.name);
             femaleMarkers.push(marker);
         });
-        this.femaleLayerGroup = L.layerGroup(femaleMarkers);
+        this.femaleLayerGroup.clearLayers();
+        this.femaleLayerGroup.addLayer(L.layerGroup(femaleMarkers));
     };
     AppComponent.prototype.generateMaleLayerGroup = function (maleAgents) {
         var _this = this;
         var maleMarkers = [];
         maleAgents.forEach(function (maleAgent) {
-            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], { icon: maleAgent.highlight ? _this.highlightedMaleMarker : _this.maleMarker }).bindPopup('Name: ' + maleAgent.name);
+            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], { icon: _this.highlightAgent(maleAgent) ? _this.highlightedMaleMarker : _this.maleMarker }).bindPopup('Name: ' + maleAgent.name);
             maleMarkers.push(marker);
         });
-        this.maleLayerGroup = L.layerGroup(maleMarkers);
+        this.maleLayerGroup.clearLayers();
+        this.maleLayerGroup.addLayer(L.layerGroup(maleMarkers));
     };
     AppComponent.prototype.processMaleServerResults = function (maleAgents) {
         this.maleAgents = maleAgents;
-        this.filterByName();
-        this.generateMaleLayerGroup(this.maleAgents);
-        this.maleLayerGroup.addTo(this.map);
+        this.generateMaleLayerGroup(maleAgents);
+        // this.maleLayerGroup.addTo(this.map);
     };
     AppComponent.prototype.processFemaleServerResults = function (femaleAgents) {
         this.femaleAgents = femaleAgents;
-        this.filterByName();
-        this.generateFemaleLayerGroup(this.femaleAgents);
-        this.femaleLayerGroup.addTo(this.map);
-    };
-    AppComponent.prototype.resetMapLayers = function () {
-        this.map.removeLayer(this.femaleLayerGroup);
-        this.map.removeLayer(this.maleLayerGroup);
+        this.generateFemaleLayerGroup(femaleAgents);
+        // this.femaleLayerGroup.addTo(this.map);
     };
     __decorate([
         core_1.Input

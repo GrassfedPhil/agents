@@ -80,8 +80,8 @@ var AppComponent = (function () {
     AppComponent = __decorate([
         core_1.Component({
             selector: 'my-app',
-            template: "\n      <input [(ngModel)]=\"ageFilter\" (keyup.enter)=\"filterByAge()\">\n      <button (click)=filterByAge()>Filter by age</button>\n      \n      <input [(ngModel)]=\"nameFilter\"(keyup.enter)=\"filterByName()\">\n      <button (click)=filterByName()>Filter by name</button>\n     <div id=\"mapid\"></div>\n    ",
-            styles: ["\n  #mapid { height: 500px; }\n\n"],
+            template: "\n      <md-input type=\"number\" [(ngModel)]=\"ageFilter\" (keyup.enter)=\"filterByAge()\"></md-input>\n      <button md-button (click)=filterByAge()>Filter by age</button>\n      \n      <md-input [(ngModel)]=\"nameFilter\"(keyup.enter)=\"filterByName()\"></md-input>\n      <button md-button (click)=filterByName()>Filter by name</button>\n     <div id=\"mapid\"></div>\n    ",
+            styles: ["\n  #mapid { height: 90%; }\n\n"],
             providers: [agent_service_1.AgentService]
         }),
         __param(0, core_1.Inject(agent_service_1.AgentService))

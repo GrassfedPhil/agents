@@ -7,16 +7,16 @@ import {Markers} from "./markers";
 @Component({
     selector: 'my-app',
     template: `
-      <input [(ngModel)]="ageFilter" (keyup.enter)="filterByAge()">
-      <button (click)=filterByAge()>Filter by age</button>
+      <md-input type="number" [(ngModel)]="ageFilter" (keyup.enter)="filterByAge()"></md-input>
+      <button md-button (click)=filterByAge()>Filter by age</button>
       
-      <input [(ngModel)]="nameFilter"(keyup.enter)="filterByName()">
-      <button (click)=filterByName()>Filter by name</button>
+      <md-input [(ngModel)]="nameFilter"(keyup.enter)="filterByName()"></md-input>
+      <button md-button (click)=filterByName()>Filter by name</button>
      <div id="mapid"></div>
     `,
 
     styles: [`
-  #mapid { height: 500px; }
+  #mapid { height: 90%; }
 
 `],
     providers: [AgentService]

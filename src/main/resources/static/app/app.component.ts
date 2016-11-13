@@ -34,27 +34,33 @@ export class AppComponent implements OnInit {
     map;
     femaleLayerGroup = L.layerGroup([]);
     maleLayerGroup = L.layerGroup([]);
-    maleMarker = L.AwesomeMarkers.icon({
-        prefix: 'ion',
-        icon: 'man'
-    });
-    femaleMarker = L.AwesomeMarkers.icon({
-        prefix: 'ion',
-        icon: 'woman',
-        markerColor: 'red'
-    });
 
-    highlightedMaleMarker = L.AwesomeMarkers.icon({
-        prefix: 'ion',
-        icon: 'man',
-        markerColor: 'orange'
-    });
+    maleMarkers = {
+        normal: L.AwesomeMarkers.icon({
+            prefix: 'ion',
+            icon: 'man'
+        }),
+        highlighted: L.AwesomeMarkers.icon({
+            prefix: 'ion',
+            icon: 'man',
+            markerColor: 'orange'
+        })
+    };
 
-    highlightedFemaleMarker = L.AwesomeMarkers.icon({
-        prefix: 'ion',
-        icon: 'woman',
-        markerColor: 'orange'
-    });
+    femaleMarkers = {
+        normal: L.AwesomeMarkers.icon({
+            prefix: 'ion',
+            icon: 'woman',
+            markerColor: 'red'
+        }),
+
+
+        highlighted: L.AwesomeMarkers.icon({
+            prefix: 'ion',
+            icon: 'woman',
+            markerColor: 'orange'
+        })
+    };
 
 
     constructor(@Inject(AgentService) private agentService: AgentService) {
@@ -65,8 +71,8 @@ export class AppComponent implements OnInit {
     }
 
     filterName(): void {
-        this.processMaleServerResults(this.maleAgents);
-        this.processFemaleServerResults(this.femaleAgents);
+        this.processServerResults(this.maleAgents, this.maleMarkers, this.maleLayerGroup);
+        this.processServerResults(this.femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
     }
 
     highlightAgent(agent): boolean {
@@ -89,39 +95,23 @@ export class AppComponent implements OnInit {
     }
 
     getAgentsFromServer(): void {
-        this.agentService.getFemaleAgents(this.ageFilter).then(femaleAgents => this.processFemaleServerResults(femaleAgents));
-        this.agentService.getMaleAgents(this.ageFilter).then(maleAgents => this.processMaleServerResults(maleAgents))
-    }
-
-    generateFemaleLayerGroup(femaleAgents): void {
-        let femaleMarkers = [];
-        femaleAgents.forEach(femaleAgent => {
-            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], {icon: this.highlightAgent(femaleAgent) ? this.highlightedFemaleMarker : this.femaleMarker}).bindPopup('Name: ' + femaleAgent.name);
-            femaleMarkers.push(marker);
+        this.agentService.getFemaleAgents(this.ageFilter).then(femaleAgents => {
+            this.femaleAgents = femaleAgents;
+            this.processServerResults(femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
         });
-        this.femaleLayerGroup.clearLayers();
-        this.femaleLayerGroup.addLayer(L.layerGroup(femaleMarkers));
+        this.agentService.getMaleAgents(this.ageFilter).then(maleAgents => {
+            this.maleAgents = maleAgents;
+            this.processServerResults(maleAgents, this.maleMarkers, this.maleLayerGroup);
+        })
     }
 
-    generateMaleLayerGroup(maleAgents): void {
-        let maleMarkers = [];
-        maleAgents.forEach(maleAgent => {
-            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], {icon: this.highlightAgent(maleAgent) ? this.highlightedMaleMarker : this.maleMarker}).bindPopup('Name: ' + maleAgent.name);
-            maleMarkers.push(marker);
+    processServerResults(agentArray, markers, layerGroup): void {
+        let agentMarkersArray = [];
+        agentArray.forEach(agent => {
+            var marker = L.marker([agent.latitude, agent.longitude], {icon: this.highlightAgent(agent) ? markers.highlighted : markers.normal}).bindPopup('Name: ' + agent.name);
+            agentMarkersArray.push(marker);
         });
-        this.maleLayerGroup.clearLayers();
-        this.maleLayerGroup.addLayer(L.layerGroup(maleMarkers));
-    }
-
-    processMaleServerResults(maleAgents): void {
-        this.maleAgents = maleAgents;
-        this.generateMaleLayerGroup(maleAgents);
-        // this.maleLayerGroup.addTo(this.map);
-    }
-
-    processFemaleServerResults(femaleAgents): void {
-        this.femaleAgents = femaleAgents;
-        this.generateFemaleLayerGroup(femaleAgents);
-        // this.femaleLayerGroup.addTo(this.map);
+        layerGroup.clearLayers();
+        layerGroup.addLayer(L.layerGroup(agentMarkersArray));
     }
 }

@@ -18,32 +18,36 @@ var AppComponent = (function () {
         this.maleAgents = [];
         this.femaleLayerGroup = L.layerGroup([]);
         this.maleLayerGroup = L.layerGroup([]);
-        this.maleMarker = L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'man'
-        });
-        this.femaleMarker = L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'woman',
-            markerColor: 'red'
-        });
-        this.highlightedMaleMarker = L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'man',
-            markerColor: 'orange'
-        });
-        this.highlightedFemaleMarker = L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'woman',
-            markerColor: 'orange'
-        });
+        this.maleMarkers = {
+            normal: L.AwesomeMarkers.icon({
+                prefix: 'ion',
+                icon: 'man'
+            }),
+            highlighted: L.AwesomeMarkers.icon({
+                prefix: 'ion',
+                icon: 'man',
+                markerColor: 'orange'
+            })
+        };
+        this.femaleMarkers = {
+            normal: L.AwesomeMarkers.icon({
+                prefix: 'ion',
+                icon: 'woman',
+                markerColor: 'red'
+            }),
+            highlighted: L.AwesomeMarkers.icon({
+                prefix: 'ion',
+                icon: 'woman',
+                markerColor: 'orange'
+            })
+        };
     }
     AppComponent.prototype.filter = function () {
         this.getAgentsFromServer();
     };
     AppComponent.prototype.filterName = function () {
-        this.processMaleServerResults(this.maleAgents);
-        this.processFemaleServerResults(this.femaleAgents);
+        this.processServerResults(this.maleAgents, this.maleMarkers, this.maleLayerGroup);
+        this.processServerResults(this.femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
     };
     AppComponent.prototype.highlightAgent = function (agent) {
         return this.nameFilter && agent.name.toLowerCase().startsWith(this.nameFilter.toLowerCase());
@@ -62,38 +66,24 @@ var AppComponent = (function () {
     };
     AppComponent.prototype.getAgentsFromServer = function () {
         var _this = this;
-        this.agentService.getFemaleAgents(this.ageFilter).then(function (femaleAgents) { return _this.processFemaleServerResults(femaleAgents); });
-        this.agentService.getMaleAgents(this.ageFilter).then(function (maleAgents) { return _this.processMaleServerResults(maleAgents); });
-    };
-    AppComponent.prototype.generateFemaleLayerGroup = function (femaleAgents) {
-        var _this = this;
-        var femaleMarkers = [];
-        femaleAgents.forEach(function (femaleAgent) {
-            var marker = L.marker([femaleAgent.latitude, femaleAgent.longitude], { icon: _this.highlightAgent(femaleAgent) ? _this.highlightedFemaleMarker : _this.femaleMarker }).bindPopup('Name: ' + femaleAgent.name);
-            femaleMarkers.push(marker);
+        this.agentService.getFemaleAgents(this.ageFilter).then(function (femaleAgents) {
+            _this.femaleAgents = femaleAgents;
+            _this.processServerResults(femaleAgents, _this.femaleMarkers, _this.femaleLayerGroup);
         });
-        this.femaleLayerGroup.clearLayers();
-        this.femaleLayerGroup.addLayer(L.layerGroup(femaleMarkers));
-    };
-    AppComponent.prototype.generateMaleLayerGroup = function (maleAgents) {
-        var _this = this;
-        var maleMarkers = [];
-        maleAgents.forEach(function (maleAgent) {
-            var marker = L.marker([maleAgent.latitude, maleAgent.longitude], { icon: _this.highlightAgent(maleAgent) ? _this.highlightedMaleMarker : _this.maleMarker }).bindPopup('Name: ' + maleAgent.name);
-            maleMarkers.push(marker);
+        this.agentService.getMaleAgents(this.ageFilter).then(function (maleAgents) {
+            _this.maleAgents = maleAgents;
+            _this.processServerResults(maleAgents, _this.maleMarkers, _this.maleLayerGroup);
         });
-        this.maleLayerGroup.clearLayers();
-        this.maleLayerGroup.addLayer(L.layerGroup(maleMarkers));
     };
-    AppComponent.prototype.processMaleServerResults = function (maleAgents) {
-        this.maleAgents = maleAgents;
-        this.generateMaleLayerGroup(maleAgents);
-        // this.maleLayerGroup.addTo(this.map);
-    };
-    AppComponent.prototype.processFemaleServerResults = function (femaleAgents) {
-        this.femaleAgents = femaleAgents;
-        this.generateFemaleLayerGroup(femaleAgents);
-        // this.femaleLayerGroup.addTo(this.map);
+    AppComponent.prototype.processServerResults = function (agentArray, markers, layerGroup) {
+        var _this = this;
+        var agentMarkersArray = [];
+        agentArray.forEach(function (agent) {
+            var marker = L.marker([agent.latitude, agent.longitude], { icon: _this.highlightAgent(agent) ? markers.highlighted : markers.normal }).bindPopup('Name: ' + agent.name);
+            agentMarkersArray.push(marker);
+        });
+        layerGroup.clearLayers();
+        layerGroup.addLayer(L.layerGroup(agentMarkersArray));
     };
     __decorate([
         core_1.Input

@@ -1,16 +1,17 @@
 import {Component, OnInit, Inject, Input} from '@angular/core';
 import {AgentService} from "./agent.service";
 import {Agent} from "./agent";
+import {Markers} from "./markers";
 
 
 @Component({
     selector: 'my-app',
     template: `
-      <input [(ngModel)]="ageFilter" (keyup.enter)="filter()">
-      <button (click)=filter()>Filter</button>
+      <input [(ngModel)]="ageFilter" (keyup.enter)="filterByAge()">
+      <button (click)=filterByAge()>Filter by age</button>
       
-      <input [(ngModel)]="nameFilter"(keyup.enter)="filterName()">
-      <button (click)=filterName()>Filter</button>
+      <input [(ngModel)]="nameFilter"(keyup.enter)="filterByName()">
+      <button (click)=filterByName()>Filter by name</button>
      <div id="mapid"></div>
     `,
 
@@ -28,55 +29,32 @@ export class AppComponent implements OnInit {
     @Input
     nameFilter;
 
-    agents: Agent[] = [];
     femaleAgents: Agent[] = [];
     maleAgents: Agent[] = [];
-    map;
+
+    map: L.map;
     femaleLayerGroup = L.layerGroup([]);
     maleLayerGroup = L.layerGroup([]);
-
-    maleMarkers = {
-        normal: L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'man'
-        }),
-        highlighted: L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'man',
-            markerColor: 'orange'
-        })
-    };
-
-    femaleMarkers = {
-        normal: L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'woman',
-            markerColor: 'red'
-        }),
-
-
-        highlighted: L.AwesomeMarkers.icon({
-            prefix: 'ion',
-            icon: 'woman',
-            markerColor: 'orange'
-        })
-    };
-
+    maleMarkers: Markers;
+    femaleMarkers: Markers;
 
     constructor(@Inject(AgentService) private agentService: AgentService) {
+        this.maleMarkers = new Markers('man', 'blue', 'orange');
+        this.femaleMarkers = new Markers('woman', 'red', 'orange');
     }
 
-    filter(): void {
+    ngOnInit(): void {
+        this.drawMap();
         this.getAgentsFromServer();
     }
 
-    filterName(): void {
-        this.processServerResults(this.maleAgents, this.maleMarkers, this.maleLayerGroup);
-        this.processServerResults(this.femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
+    filterByAge(): void {
+        this.getAgentsFromServer();
     }
 
-    highlightAgent(agent): boolean {
-        return this.nameFilter && agent.name.toLowerCase().startsWith(this.nameFilter.toLowerCase());
+    filterByName(): void {
+        this.processAgents(this.maleAgents, this.maleMarkers, this.maleLayerGroup);
+        this.processAgents(this.femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
     }
 
     drawMap(): void {
@@ -88,30 +66,38 @@ export class AppComponent implements OnInit {
         this.maleLayerGroup.addTo(this.map);
     }
 
-
-    ngOnInit(): void {
-        this.drawMap();
-        this.getAgentsFromServer();
-    }
-
     getAgentsFromServer(): void {
         this.agentService.getFemaleAgents(this.ageFilter).then(femaleAgents => {
             this.femaleAgents = femaleAgents;
-            this.processServerResults(femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
+            this.processAgents(femaleAgents, this.femaleMarkers, this.femaleLayerGroup);
         });
+
         this.agentService.getMaleAgents(this.ageFilter).then(maleAgents => {
             this.maleAgents = maleAgents;
-            this.processServerResults(maleAgents, this.maleMarkers, this.maleLayerGroup);
+            this.processAgents(maleAgents, this.maleMarkers, this.maleLayerGroup);
         })
     }
 
-    processServerResults(agentArray, markers, layerGroup): void {
-        let agentMarkersArray = [];
-        agentArray.forEach(agent => {
-            var marker = L.marker([agent.latitude, agent.longitude], {icon: this.highlightAgent(agent) ? markers.highlighted : markers.normal}).bindPopup('Name: ' + agent.name);
-            agentMarkersArray.push(marker);
-        });
+    processAgents(agentArray, markers, layerGroup): void {
+        var agentMarkersArray = this.generateMarkers(agentArray, markers);
+        this.addMarkersToMap(layerGroup, agentMarkersArray);
+    }
+
+    addMarkersToMap(layerGroup: L.layerGroup, agentMarkersArray: {}): void {
         layerGroup.clearLayers();
         layerGroup.addLayer(L.layerGroup(agentMarkersArray));
+    }
+
+    generateMarkers(agentArray: Agent[], markers: {}): L.marker[] {
+        let agentMarkersArray = [];
+        agentArray.forEach(agent => {
+            var marker = L.marker([agent.latitude, agent.longitude], {icon: this.highlightAgent(agent) ? markers.highlighted : markers.normal}).bindPopup('Name: ' + agent.name + '<br>Age: ' + agent.age);
+            agentMarkersArray.push(marker);
+        });
+        return agentMarkersArray;
+    }
+
+    highlightAgent(agent: Agent): boolean {
+        return this.nameFilter && agent.name.toLowerCase().startsWith(this.nameFilter.toLowerCase());
     }
 }
